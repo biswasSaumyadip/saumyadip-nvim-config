@@ -28,3 +28,49 @@ require("core.keymaps")
 -- Initialize lazy.nvim to manage plugins
 require("lazy").setup(require("core.plugins"))
 
+require('telescope').setup {
+  defaults = {
+    file_ignore_patterns = {
+      "node_modules",
+      "dist",
+      "build",
+      ".git",
+      ".next",
+      ".cache",
+      ".angular",
+      ".vscode",
+      ".idea",
+      ".turbo",
+      "coverage",
+      "tmp",
+      "logs",
+      "__pycache__",
+      "target",    -- Rust/Cargo
+      "%.lock",    -- lock files
+      "%.sqlite3", -- SQLite DBs
+      "%.ipynb",   -- Jupyter notebooks
+      "%.pdf",
+      "%.jpg",
+      "%.jpeg",
+      "%.png",
+      "%.webp",
+      "%.svg",
+      "%.mp4",
+      "%.mp3",
+      "%.zip",
+      "%.tar",
+      "%.gz",
+      "%.7z",
+      "%.exe",
+      "%.dll",
+      "%.DS_Store",
+      "%.class",
+      "%.o",
+      "%.obj",
+      "%.so",
+      "%.a",
+      "%.bin",
+      "%.log"
+    },
+  }
+}
