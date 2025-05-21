@@ -134,3 +134,7 @@ end, { desc = "Restore Last Session" })
 vim.keymap.set("n", "<leader>qd", function()
   require("persistence").stop()
 end, { desc = "Don't Save Session" })
+
+vim.keymap.set("n", "<leader>F", function()
+  require("conform").format({ async = true })
+end, { desc = "Format buffer" })
