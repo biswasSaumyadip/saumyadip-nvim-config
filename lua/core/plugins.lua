@@ -1,286 +1,311 @@
 return { {
-      "nvim-tree/nvim-tree.lua",
-      dependencies = {
-        "nvim-tree/nvim-web-devicons"
-      },
-      config = function()
-        require("nvim-tree").setup({})
-      end
+  "nvim-tree/nvim-tree.lua",
+  dependencies = {
+    "nvim-tree/nvim-web-devicons"
+  },
+  config = function()
+    require("nvim-tree").setup({})
+  end
+},
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    priority = 1000,
+    config = function()
+      vim.cmd("colorscheme catppuccin")
+    end
+  },
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" }
+  },
+
+  -- MASON CORE
+  {
+    "williamboman/mason.nvim",
+    config = function()
+      require("mason").setup()
+    end
+  },
+
+  -- LSP + CMP integration
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "neovim/nvim-lspconfig",
+      "hrsh7th/cmp-nvim-lsp"
     },
-      {
-        "catppuccin/nvim",
-        name = "catppuccin",
-        priority = 1000,
-        config = function()
-          vim.cmd("colorscheme catppuccin")
-        end
-      },
-      {
-        "nvim-telescope/telescope.nvim",
-        dependencies = { "nvim-lua/plenary.nvim" }
-      },
+    config = function()
+      require("mason-lspconfig").setup()
 
-      -- MASON CORE
-      {
-        "williamboman/mason.nvim",
-        config = function()
-          require("mason").setup()
-        end
-      },
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      local lspconfig = require("lspconfig")
+      local servers = { "pyright", "tsserver", "lua_ls" } -- customize with your servers
 
-      -- LSP + CMP integration
-      {
-        "williamboman/mason-lspconfig.nvim",
-        dependencies = {
-          "williamboman/mason.nvim",
-          "neovim/nvim-lspconfig",
-          "hrsh7th/cmp-nvim-lsp"
+      for _, server_name in ipairs(servers) do
+        lspconfig[server_name].setup({
+          capabilities = capabilities,
+        })
+      end
+    end
+  }, -- AUTOCOMPLETION SETUP
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip"
+    },
+    config = function()
+      local cmp = require("cmp")
+      local luasnip = require("luasnip")
+
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
         },
-        config = function()
-          require("mason-lspconfig").setup()
-
-          local capabilities = require("cmp_nvim_lsp").default_capabilities()
-          local lspconfig = require("lspconfig")
-          local servers = { "pyright", "tsserver", "lua_ls" } -- customize with your servers
-
-          for _, server_name in ipairs(servers) do
-            lspconfig[server_name].setup({
-              capabilities = capabilities,
-            })
-          end
-        end
-      }, -- AUTOCOMPLETION SETUP
-      {
-        "hrsh7th/nvim-cmp",
-        dependencies = {
-          "hrsh7th/cmp-nvim-lsp",
-          "L3MON4D3/LuaSnip",
-          "saadparwaiz1/cmp_luasnip"
+        mapping = cmp.mapping.preset.insert({
+          ["<Tab>"] = cmp.mapping.select_next_item(),
+          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-Space>"] = cmp.mapping.complete(),
+        }),
+        sources = {
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
         },
-        config = function()
-          local cmp = require("cmp")
-          local luasnip = require("luasnip")
-
-          cmp.setup({
-            snippet = {
-              expand = function(args)
-                luasnip.lsp_expand(args.body)
-              end,
-            },
-            mapping = cmp.mapping.preset.insert({
-              ["<Tab>"] = cmp.mapping.select_next_item(),
-              ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-              ["<CR>"] = cmp.mapping.confirm({ select = true }),
-              ["<C-Space>"] = cmp.mapping.complete(),
-            }),
-            sources = {
-              { name = "nvim_lsp" },
-              { name = "luasnip" },
-            },
-          })
-        end
-      },
-      {
-        "stevearc/conform.nvim",
-        event = { "BufWritePre" }, -- load only when needed
-        config = function()
-          require("conform").setup({
-            formatters_by_ft = {
-              javascript = { "prettier" },
-              typescript = { "prettier" },
-              html = { "prettier" },
-              css = { "prettier" },
-              json = { "prettier" },
-              lua = { "stylua" },
-            },
-            format_on_save = {
-              timeout_ms = 500,
-              lsp_fallback = true,
-            },
-          })
-        end
-      },
-      -- Prject manager
-      {
-        "coffebar/neovim-project",
-        opts = {
-          projects = { -- define project roots
-            "~/projects/*",
-            "~/.config/*",
-          },
-          picker = {
-            type = "telescope", -- or "fzf-lua"
-          }
+      })
+    end
+  },
+  {
+    "stevearc/conform.nvim",
+    event = { "BufWritePre" }, -- load only when needed
+    config = function()
+      require("conform").setup({
+        formatters_by_ft = {
+          javascript = { "prettier" },
+          typescript = { "prettier" },
+          html = { "prettier" },
+          css = { "prettier" },
+          json = { "prettier" },
+          lua = { "stylua" },
         },
-        init = function()
-          -- enable saving the state of plugins in the session
-          vim.opt.sessionoptions:append("globals") -- save global variables that start with an uppercase letter and contain at least one lowercase letter.
-        end,
-        dependencies = {
-          { "nvim-lua/plenary.nvim" },
-          -- optional picker
-          { "nvim-telescope/telescope.nvim", tag = "0.1.4" },
-          -- optional picker
-          { "ibhagwan/fzf-lua" },
-          { "Shatur/neovim-session-manager" },
+        format_on_save = {
+          timeout_ms = 500,
+          lsp_fallback = true,
         },
-        lazy = false,
-        priority = 100,
+      })
+    end
+  },
+  -- Prject manager
+  {
+    "coffebar/neovim-project",
+    opts = {
+      projects = { -- define project roots
+        "~/projects/*",
+        "~/.config/*",
       },
-      {
-        "catgoose/nvim-colorizer.lua",
-        event = "BufReadPre",
-        opts = {},
-        config = function()
-          require("colorizer").setup({
-            sass = { enable = true, parsers = { "css" } },
-          })
-        end
-      },
-      {
-        "lewis6991/gitsigns.nvim",
-        event = { "BufReadPre", "BufNewFile" },
-        config = function()
-          require("gitsigns").setup()
-        end
-      },
-      {
-        "kdheepak/lazygit.nvim",
-        dependencies = { "nvim-lua/plenary.nvim" },
-        cmd = "LazyGit", -- only loads on command
-      },
-      {
-        "akinsho/bufferline.nvim",
-        version = "*",
-        dependencies = "nvim-tree/nvim-web-devicons",
-        config = function()
-          require("bufferline").setup({})
-        end,
-      },
-      {
-        "nvim-lualine/lualine.nvim",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        config = function()
-          require("lualine").setup({
-            options = {
-              theme = "auto",
-              section_separators = "", -- no fancy separators
-              component_separators = "",
-            }
-          })
-        end
-      },
-      {
-        "folke/trouble.nvim",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        opts = {},
-        cmd = "Trouble",
-        keys = {
-          { "<leader>xx", "<cmd>TroubleToggle<cr>",                       desc = "Toggle Trouble panel" },
-          { "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
-          { "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>",  desc = "Document Diagnostics" },
-          { "<leader>xr", "<cmd>TroubleToggle lsp_references<cr>",        desc = "LSP References" },
-        },
-      },
-      {
-        "numToStr/Comment.nvim",
-        config = function()
-          require("Comment").setup()
-        end
-      },
-      {
-        "akinsho/toggleterm.nvim",
-        version = "*",
-        config = function()
-          require("toggleterm").setup({
-            open_mapping = [[<leader>tt]], -- press <Space> + t + t
-            direction = "float",           -- or "horizontal" / "vertical"
-            shade_terminals = true,
-            float_opts = {
-              border = "curved"
-            }
-          })
-        end
-      },
-      {
-        "folke/which-key.nvim",
-        event = "VeryLazy",
-        init = function()
-          vim.o.timeout = true
-          vim.o.timeoutlen = 300
-        end,
-        config = function()
-          require("which-key").setup()
-        end,
-      },
-      {
-        "simrat39/symbols-outline.nvim",
-        cmd = "SymbolsOutline",
-        keys = {
-          { "<leader>so", "<cmd>SymbolsOutline<cr>", desc = "Toggle Symbols Outline" }
-        },
-        config = function()
-          require("symbols-outline").setup()
-        end
-      },
-      {
-        "ThePrimeagen/harpoon",
-        branch = "harpoon2",
-        dependencies = { "nvim-lua/plenary.nvim" },
-        config = function()
-          local harpoon = require("harpoon")
-
-          harpoon:setup()
-
-          -- Keymaps
-          vim.keymap.set("n", "<leader>a", function()
-            harpoon:list():add()
-          end, { desc = "Harpoon Add File" })
-
-          vim.keymap.set("n", "<leader>m", function()
-            harpoon.ui:toggle_quick_menu(harpoon:list())
-          end, { desc = "Harpoon Menu" })
-
-          vim.keymap.set("n", "<leader>1", function()
-            harpoon:list():select(1)
-          end, { desc = "Harpoon to file 1" })
-
-          vim.keymap.set("n", "<leader>2", function()
-            harpoon:list():select(2)
-          end, { desc = "Harpoon to file 2" })
-
-          vim.keymap.set("n", "<leader>3", function()
-            harpoon:list():select(3)
-          end, { desc = "Harpoon to file 3" })
-
-          vim.keymap.set("n", "<leader>4", function()
-            harpoon:list():select(4)
-          end, { desc = "Harpoon to file 4" })
-        end,
-      },
-      {
-        "folke/persistence.nvim",
-        event = "BufReadPre", -- load early so session auto-load works
-        config = function()
-          require("persistence").setup()
-        end
+      picker = {
+        type = "telescope", -- or "fzf-lua"
       }
     },
-    {
-      -- Color picker plugin for Neovim that provides an interactive color picker
-      -- and color converter with support for multiple color formats.
-      -- GitHub: https://github.com/uga-rosa/ccc.nvim
-      "uga-rosa/ccc.nvim",
-      config = function()
-        require("ccc").setup({
-          -- You can customize the plugin options here if needed.
-          -- See https://github.com/uga-rosa/ccc.nvim#configuration for details.
-        })
-      end,
-      -- Lazy-load the plugin when these commands are used
-      cmd = { "CccPick", "CccConvert" },
-      -- Optional key mapping for quickly opening the color picker
-      keys = {
-        { "<leader>cp", "<cmd>CccPick<cr>", desc = "Pick color" },
-      },
-    }
+    init = function()
+      -- enable saving the state of plugins in the session
+      vim.opt.sessionoptions:append("globals") -- save global variables that start with an uppercase letter and contain at least one lowercase letter.
+    end,
+    dependencies = {
+      { "nvim-lua/plenary.nvim" },
+      -- optional picker
+      { "nvim-telescope/telescope.nvim", tag = "0.1.4" },
+      -- optional picker
+      { "ibhagwan/fzf-lua" },
+      { "Shatur/neovim-session-manager" },
+    },
+    lazy = false,
+    priority = 100,
+  },
+  {
+    "catgoose/nvim-colorizer.lua",
+    event = "BufReadPre",
+    opts = {},
+    config = function()
+      require("colorizer").setup({
+        sass = { enable = true, parsers = { "css" } },
+      })
+    end
+  },
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      require("gitsigns").setup()
+    end
+  },
+  {
+    "kdheepak/lazygit.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    cmd = "LazyGit", -- only loads on command
+  },
+  {
+    "akinsho/bufferline.nvim",
+    version = "*",
+    dependencies = "nvim-tree/nvim-web-devicons",
+    config = function()
+      require("bufferline").setup({})
+    end,
+  },
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("lualine").setup({
+        options = {
+          theme = "auto",
+          section_separators = "", -- no fancy separators
+          component_separators = "",
+        }
+      })
+    end
+  },
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {},
+    cmd = "Trouble",
+    keys = {
+      { "<leader>xx", "<cmd>TroubleToggle<cr>",                       desc = "Toggle Trouble panel" },
+      { "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
+      { "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>",  desc = "Document Diagnostics" },
+      { "<leader>xr", "<cmd>TroubleToggle lsp_references<cr>",        desc = "LSP References" },
+    },
+  },
+  {
+    "numToStr/Comment.nvim",
+    config = function()
+      require("Comment").setup()
+    end
+  },
+  {
+    "akinsho/toggleterm.nvim",
+    version = "*",
+    config = function()
+      require("toggleterm").setup({
+        open_mapping = [[<leader>tt]], -- press <Space> + t + t
+        direction = "float",           -- or "horizontal" / "vertical"
+        shade_terminals = true,
+        float_opts = {
+          border = "curved"
+        }
+      })
+    end
+  },
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    config = function()
+      require("which-key").setup()
+    end,
+  },
+  {
+    "simrat39/symbols-outline.nvim",
+    cmd = "SymbolsOutline",
+    keys = {
+      { "<leader>so", "<cmd>SymbolsOutline<cr>", desc = "Toggle Symbols Outline" }
+    },
+    config = function()
+      require("symbols-outline").setup()
+    end
+  },
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      local harpoon = require("harpoon")
+
+      harpoon:setup()
+
+      -- Keymaps
+      vim.keymap.set("n", "<leader>a", function()
+        harpoon:list():add()
+      end, { desc = "Harpoon Add File" })
+
+      vim.keymap.set("n", "<leader>m", function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end, { desc = "Harpoon Menu" })
+
+      vim.keymap.set("n", "<leader>1", function()
+        harpoon:list():select(1)
+      end, { desc = "Harpoon to file 1" })
+
+      vim.keymap.set("n", "<leader>2", function()
+        harpoon:list():select(2)
+      end, { desc = "Harpoon to file 2" })
+
+      vim.keymap.set("n", "<leader>3", function()
+        harpoon:list():select(3)
+      end, { desc = "Harpoon to file 3" })
+
+      vim.keymap.set("n", "<leader>4", function()
+        harpoon:list():select(4)
+      end, { desc = "Harpoon to file 4" })
+    end,
+  },
+  {
+    "folke/persistence.nvim",
+    event = "BufReadPre", -- load early so session auto-load works
+    config = function()
+      require("persistence").setup()
+    end
+  },
+  {
+    -- Color picker plugin for Neovim that provides an interactive color picker
+    -- and color converter with support for multiple color formats.
+    -- GitHub: https://github.com/uga-rosa/ccc.nvim
+    "uga-rosa/ccc.nvim",
+    config = function()
+      require("ccc").setup({
+        -- You can customize the plugin options here if needed.
+        -- See https://github.com/uga-rosa/ccc.nvim#configuration for details.
+      })
+    end,
+    -- Lazy-load the plugin when these commands are used
+    cmd = { "CccPick", "CccConvert" },
+    -- Optional key mapping for quickly opening the color picker
+    keys = {
+      { "<leader>cp", "<cmd>CccPick<cr>", desc = "Pick color" },
+    },
+  },
+  {
+    "tpope/vim-dadbod",
+    dependencies = {
+      "kristijanhusak/vim-dadbod-ui",        -- ui for vim-dadbod
+      "kristijanhusak/vim-dadbod-completion" -- optional: completion integration
+    },
+    config = function()
+      -- use nerd fonts icons in the db ui for better visuals (requires nerd fonts)
+      vim.g.db_ui_use_nerd_fonts = 1
+
+      -- auto-open db ui when you add a connection
+      vim.g.db_ui_auto_open = 1
+
+      -- location to save your connection info
+      vim.g.db_ui_save_location = vim.fn.stdpath("data") .. "/db_ui"
+
+      -- show help text in the db ui window
+      vim.g.db_ui_show_help = 1
+
+      -- keymap: toggle the db ui with <leader>du
+      vim.api.nvim_set_keymap("n", "<leader>du", ":dbuitoggle<cr>", { noremap = true, silent = true })
+      vim.keymap.set("x", "<leader>rq", ":db<cr>", { desc = "run sql query", noremap = true })
+    end,
+
+  },
+}
